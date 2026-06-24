@@ -1,0 +1,52 @@
+name: CI Pipeline
+
+# 언제 실행할지 정의
+on:
+  push:
+    branches: [ main ]        # main 브랜치에 push할 때
+  pull_request:
+    branches: [ main ]        # main으로 PR 열 때
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest    # GitHub이 제공하는 Ubuntu 서버에서 실행
+
+    steps:
+      # 1. 코드를 체크아웃 (내 코드를 Actions 서버로 복사)
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Python 환경 설정
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. 필요한 패키지 설치
+      - name: Install dependencies
+        run: pip install pytest
+
+      # 4. 테스트 실행
+      - name: Run tests
+        run: pytest test_calculator.py -v
+
+  lint:
+    name: Code Lint Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install flake8
+        run: pip install flake8
+
+      # 5. 코드 스타일 검사 (PEP8)
+      - name: Run lint
+        run: flake8 calculator.py --max-line-length=88
