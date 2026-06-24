@@ -48,26 +48,16 @@ jobs:
         run: flake8 calculator.py --max-line-length=88
 
   deploy:
-    name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
-    needs: [test, lint]          # test + lint 둘 다 통과해야 배포
-    if: github.ref == 'refs/heads/main'   # main 브랜치 push일 때만
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    name: Deploy to Server
+    runs-on: self-hosted
+    needs: [test, lint]
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'              # 현재 폴더(index.html)를 업로드
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Deploy
+        run: |
+          echo "배포 완료: $(date)"
+          echo "브랜치: ${{ github.ref_name }}"
+          echo "커밋: ${{ github.sha }}"
