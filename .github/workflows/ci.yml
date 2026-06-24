@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,14 +6,18 @@ on:
   pull_request:
     branches: [ main ]
 
+# GitHub Pages 배포에 필요한 권한
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,20 +27,14 @@ jobs:
       - name: Install dependencies
         run: pip install pytest
 
-      # GitHub Secrets에 등록한 값을 환경변수로 주입
       - name: Run tests
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-          API_KEY: ${{ secrets.API_KEY }}
         run: pytest test_calculator.py -v
 
   lint:
     name: Code Lint Check
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,3 +46,28 @@ jobs:
 
       - name: Run lint
         run: flake8 calculator.py --max-line-length=88
+
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [test, lint]          # test + lint 둘 다 통과해야 배포
+    if: github.ref == 'refs/heads/main'   # main 브랜치 push일 때만
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'              # 현재 폴더(index.html)를 업로드
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
